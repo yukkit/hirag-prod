@@ -70,7 +70,9 @@ def _poll_dots_job_status(
 
     while time.time() - start_time < timeout:
         try:
-            response = requests.post(status_url, headers=headers, data=data, timeout=10)
+            response = requests.post(
+                status_url + "/status", headers=headers, data=data, timeout=10
+            )
             response.raise_for_status()
 
             # Reset failure counter on successful request
@@ -158,7 +160,9 @@ def _get_dots_token_usage(
 
     for attempt in range(retries):
         try:
-            response = requests.get(status_url, headers=headers, timeout=timeout)
+            response = requests.get(
+                status_url + f"/token_usage/{job_id}", headers=headers, timeout=timeout
+            )
             response.raise_for_status()
             status_data = response.json()
             logger.info(f"Token usage for job {job_id}: {status_data}")
@@ -270,8 +274,14 @@ def convert(
         else:
             raise ValueError(f"Unsupported scheme: '{parsed_url.scheme}'")
 
+        logging.warning(
+            f"==== Document conversion url: {get_document_converter_config(converter_type).base_url.strip('/')
+                + entry_point}"
+        )
+
         response = requests.post(
-            get_document_converter_config(converter_type).base_url,
+            get_document_converter_config(converter_type).base_url.strip("/")
+            + entry_point,
             headers=headers,
             files=files,
             timeout=get_document_converter_config(converter_type).timeout,
